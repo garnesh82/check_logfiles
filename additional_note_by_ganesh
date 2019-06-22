@@ -1,0 +1,53 @@
+--PRE_REQ--
+Debian OS
+apt-get intall git
+apt-get install build-essential
+apt-get install g++
+apt-get install autoconf
+apt-get install libtool
+
+--DOWNLOAD and COMPILE
+git clone x.git
+cd <to project dir>
+autoreconf -i
+./configure
+make
+make install
+
+--TEST PLUGIN--
+vi sample.log and insert some lines
+./check_logfiles --logfile=sample.log -criticalpattern="critical"
+CRITICAL - (1 errors in check_logfiles.protocol-2019-06-22-11-28-43) - this is a critical error |'default_lines'=1 'default_warnings'=0 'default_criticals'=1 'default_unknowns'=0
+
+./check_logfiles --logfile=sample.log -warningpattern="warning"
+WARNING - (1 warnings in check_logfiles.protocol-2019-06-22-11-29-45) - this is a warning error |'default_lines'=1 'default_warnings'=1 'default_criticals'=0 'default_unknowns'=0
+
+--or
+
+Create a search config file as below
+@searches = (
+  {
+    tag => 'software_errors',
+    logfile => '/tmp/test.log',
+    rotation => 'bmwhpux',
+    criticalpatterns => ['CRITICAL_ERRORS', 'critical line'],
+    warningpatterns => ['WARNING_ERRORS', 'warning line'],
+    options => 'script,protocol,nocount'
+  }
+  )
+  
+  CRITICAL - (1 errors, 1 warnings in sample.protocol-2019-06-22-11-38-12) - critical line |'software_errors_lines'=1 'software_errors_warnings'=1 'software_errors_criticals'=1 'software_errors_unknowns'=0
+  
+  
+  
+  
+--TROUBLESHOOTING--
+1. Create a directory as "/etc/mtab" if you hit below error
+  readline() on closed filehandle MTAB at ./check_logfiles line 1833.
+ 
+2. In progress
+ Use of uninitialized value $script in concatenation (.) or string at ./check_logfiles line 1665, <GEN1> line 1.
+ Use of uninitialized value $script in sprintf at ./check_logfiles line 1666, <GEN1> line 1.
+ Use of uninitialized value $script in sprintf at ./check_logfiles line 1667, <GEN1> line 1.
+ Can't exec "/bin/": Permission denied at ./check_logfiles line 1742, <GEN1> line 1.
+ Use of uninitialized value in sprintf at ./check_logfiles line 3829.
