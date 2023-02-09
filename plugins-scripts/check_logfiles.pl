@@ -128,6 +128,15 @@ Usage: check_logfiles [-t timeout] -f <configfile> [--searches=tag1,tag2,...]
 EOTXT
 }
 
+sub decode_rfc3986 {
+  my ($str) = @_;
+  if ($str && $str =~ /^rfc3986:\/\/(.*)/) {
+    $str = $1;
+    $str =~ s/%([A-Za-z0-9]{2})/chr(hex($1))/seg;
+  }
+  return $str;
+}
+
 %commandline = ();
 my @params = (
     "timeout|t=i",
@@ -215,6 +224,8 @@ my @params = (
     "rotatewait",
     "rununique",
     "htmlencode",
+    "randominode",
+    "randomdevno",
 );
 if (! GetOptions(\%commandline, @params)) {
   print_help();
@@ -237,7 +248,7 @@ if (exists $commandline{config}) {
   $enough_info = 1;
 } elsif (exists $commandline{logfile}) {
   $enough_info = 1;
-} elsif (exists $commandline{type} && $commandline{type} =~ /^(eventlog|errpt|ipmitool|wevtutil|executable|dumpel|journald)/) {
+} elsif (exists $commandline{type} && $commandline{type} =~ /^(eventlog|errpt|ipmitool|wevtutil|executable|dumpel|journald|dmesg)/) {
   $enough_info = 1;
 } elsif (exists $commandline{deinstall}) {
   $commandline{type} = 'dummy';
@@ -356,6 +367,9 @@ if ($^O eq "hpux") {
   $ENV{PATH} = $ENV{PATH}.":/usr/contrib/bin";
 }
 
+foreach my $key (keys %commandline) {
+  $commandline{$key} = decode_rfc3986($commandline{$key});
+}
 if (my $cl = Nagios::CheckLogfiles->new({
     cfgfile => $commandline{config} ? $commandline{config} : undef,
     searches => [ 
@@ -423,6 +437,8 @@ if (my $cl = Nagios::CheckLogfiles->new({
             $commandline{noprotocol} ? "noprotocol" : undef,
             $commandline{nocase} ? "nocase" : undef,
             $commandline{noperfdata} ? "noperfdata" : undef,
+            $commandline{nosavethresholdcount} ? "nosavethresholdcount" : undef,
+            $commandline{thresholdexpiry} ? "thresholdexpiry=".$commandline{thresholdexpiry} : undef,
             $commandline{winwarncrit} ? "winwarncrit" : undef,
             $commandline{nologfilenocry} ? "nologfilenocry" : undef,
             $commandline{logfilemissing} ? "logfilemissing=".$commandline{logfilemissing} : undef,
@@ -437,6 +453,8 @@ if (my $cl = Nagios::CheckLogfiles->new({
             $commandline{encoding} ? "encoding=".$commandline{encoding} : undef,
             defined $commandline{sticky} ? "sticky".($commandline{sticky} ? "=".$commandline{sticky} : "") : undef,
             $commandline{preferredlevel} ? "preferredlevel=".$commandline{preferredlevel} : undef,
+            $commandline{randominode} ? "randominode" : undef,
+            $commandline{randomdevno} ? "randomdevno" : undef,
         ),
         archivedir =>
             $commandline{archivedir} ?

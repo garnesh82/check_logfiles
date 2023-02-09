@@ -111,23 +111,8 @@ sub collectfiles {
           fingerprint => "0:0" });
     } else {
       $self->trace("cannot execute errpt");
-      $self->addevent('UNKNOWN', "cannot execute errpt");
+      $self->addmatch('UNKNOWN', "cannot execute errpt");
     }
   }
 }
-
-sub unstick {
-  my $self = shift;
-  $self->loadstate();
-  foreach (keys %{$self->{laststate}}) {
-    $self->{newstate}->{$_} = $self->{laststate}->{$_};
-  }
-  $self->addevent(0, "unstick");
-  $self->trace("remove the sticky error with --unstick");
-  $self->{laststate}->{laststicked} = 0;
-  $self->{errpt}->{endtime} = $self->{laststate}->{logtime};
-  $self->savestate();
-  return $self;
-}
-
 
